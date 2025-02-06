@@ -4,7 +4,8 @@ import {
     getCart,
     updateCartItem,
     removeFromCart,
-    clearCart, // Import the new clearCart function
+    clearCart,
+    clearCartByID,getUserCart // Import the new clearCart function
 } from '../controllers/cartController.js';
 
 const router = express.Router();
@@ -20,6 +21,11 @@ router.put('/update/:userId/:productId', updateCartItem);
 
 // Remove a product from the cart
 router.delete('/remove/:userId/:productId', removeFromCart);
+
+// Route to clear a user's cart by userId
+router.delete('/clear/:userId', clearCartByID);
+
+
 
 // Clear all items from the cart
 router.delete('/clear', clearCart); // New route

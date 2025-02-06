@@ -1,6 +1,30 @@
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
 
+
+
+export const clearCartByID = async (req, res) => {
+    try {
+      const { userId } = req.params;
+  
+      // Find the user's cart and clear all items
+      const cart = await Cart.findOne({ user: userId });
+  
+      if (!cart) {
+        return res.status(404).json({ message: 'Cart not found for this user.' });
+      }
+  
+      // Clear the cart items
+      cart.items = [];
+      await cart.save();
+  
+      res.status(200).json({ message: 'Cart cleared successfully.', cart });
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      res.status(500).json({ message: 'Failed to clear cart.' });
+    }
+  };
+
 // Add a product to the cart
 export const addToCart = async (req, res) => {
     try {
@@ -26,30 +50,7 @@ export const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 };
-// Fetch the cart for a user
-export const getCart = async (req, res) => {
-    try {
-        const userId = req.params.userId;
 
-        // Fetch cart and populate the 'product' field
-        const cart = await Cart.findOne({ user: userId }).populate('items.product');
-
-        if (!cart) {
-            return res.status(404).json({ message: 'Cart not found' });
-        }
-
-        // Ensure each item has a valid product object
-        const populatedItems = cart.items.map(item => ({
-            ...item.toObject(),
-            product: item.product || { name: 'N/A', brand: 'N/A', img: '' }, // Fallback for missing products
-        }));
-
-        res.status(200).json({ items: populatedItems });
-    } catch (error) {
-        console.error('Error fetching cart:', error);
-        res.status(500).json({ message: 'Server error', error });
-    }
-};
 // Update cart item quantity
 export const updateCartItem = async (req, res) => {
     try {
@@ -118,6 +119,59 @@ export const clearCart = async (req, res) => {
 
         res.status(200).json({ message: 'Cart cleared successfully', cart });
     } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+
+
+export const getUserCart = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Fetch cart and populate the 'product' field
+        const cart = await Cart.findOne({ user: userId }).populate('items.product');
+
+        // If no cart exists or the cart is empty, return a 404 response
+        if (!cart || cart.items.length === 0) {
+            return res.status(404).json({ message: 'User has no items in cart.' });
+        }
+
+        // Ensure each item has a valid product object
+        const populatedItems = cart.items.map(item => ({
+            ...item.toObject(),
+            product: item.product || { name: 'N/A', brand: 'N/A', img: '' }, // Fallback for missing products
+        }));
+
+        // Return the populated items directly
+        res.status(200).json({ items: populatedItems });
+    } catch (error) {
+        console.error('Error fetching cart:', error);
+        res.status(500).json({ message: 'Failed to fetch cart.', error });
+    }
+};
+
+// Fetch the cart for a user
+export const getCart = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Fetch cart and populate the 'product' field
+        const cart = await Cart.findOne({ user: userId }).populate('items.product');
+
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        // Ensure each item has a valid product object
+        const populatedItems = cart.items.map(item => ({
+            ...item.toObject(),
+            product: item.product || { name: 'N/A', brand: 'N/A', img: '' }, // Fallback for missing products
+        }));
+
+        res.status(200).json({ items: populatedItems });
+    } catch (error) {
+        console.error('Error fetching cart:', error);
         res.status(500).json({ message: 'Server error', error });
     }
 };
